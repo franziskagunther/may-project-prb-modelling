@@ -1,5 +1,7 @@
 # Project Modelling Salary Data 
 
+library(gridExtra)
+library(tidyverse)
 load("salary.Rdata")
 
 # getting an overview over discrete variables gender, ethnicity and university graduation
@@ -39,25 +41,37 @@ ggplot(data = df_individual) +
   scale_fill_viridis_d()
 
 # mean per year per ethnicity
-years_observed = length(levels(as.factor(df$year)))
+years_observed <- length(levels(as.factor(df$year)))
+ethnicities_observed <- length(levels(df$ethnicity))
 
-y <- rep(0, years_observed)
-e <- rep(0, years_observed)
-m <- rep(0, years_observed)
-
-for(i in 1:years_observed) {
-  year = as.integer(min(levels(as.factor(df$year)))) - 1 + i # buggy
-  for(j in 1:length(levels(df$ethnicity))) {
-    ethn = levels(df$ethnicity)[j]
-    # me = mean(df$salary[df$ethnicity[df$year == year] == ethn]) - not yet correct
-    print(me)
+for(i in 1:ethnicities_observed){
+  ethn = levels(df$ethnicity)[i]
+  
+  y <- rep(0, years_observed)
+  e <- rep(ethn, years_observed)
+  m <- rep(0, years_observed)
+  
+  for(j in 1:years_observed) {
+    year = as.integer(min(levels(as.factor(df$year)))) - 1 + j
+    df_selectrows <- df[df$ethnicity == ethn & df$year == year, ]
+    me = mean(df_selectrows$salary)
+    
+    y[j] = year
+    m[j] = me
   }
-  y[i] = year
-  e[i] = ethn
-  m[i] = me
+  
+  if(i == 1) {
+    ethnicity_df <- data.frame(Year = y, Ethnicity = e, Salary = m)
+  } else {
+    ethnicity_df <- rbind(ethnicity_df, data.frame(Year = y, Ethnicity = e, Salary = m))
+  }
+  
 }
 
-avgoverethnicity <- data.frame(year = y, ethnicity = e, mean = m)
+ggplot(ethnicity_df, aes(x=Year, y=Salary, group=Ethnicity)) +
+  geom_line(aes(linetype=Ethnicity, color=Ethnicity))+
+  geom_point(aes(color=Ethnicity))+
+  theme(legend.position="right")
 
 # preprocessing of data
 
