@@ -229,6 +229,17 @@ permute_desired <- function(df, column, n_perm, ethn_coef=NULL, beta_estimate) {
           for (k in 1:length(covariate_pperson_shuffled)) {
             covariatecol = append(covariatecol, rep(covariate_pperson_shuffled[k], 51))
           }
+          
+          # convert shuffled ethnicity column into a factor
+          if(column == 4) {
+            covariatecol[covariatecol == 1] = "Asian"
+            covariatecol[covariatecol == 2] = "Black"
+            covariatecol[covariatecol == 3] = "Other"
+            covariatecol[covariatecol == 4] = "White"
+            
+            covariatecol = factor(covariatecol, levels = c("Asian", "Black" , "Other",   "White"))
+          }
+          
           df_perm[, i] = covariatecol
         }
       } else {
@@ -253,15 +264,15 @@ permute_desired <- function(df, column, n_perm, ethn_coef=NULL, beta_estimate) {
     } else if (column == 3 & is.null(ethn_coef)) {
       coefs[m] = coef(model)["df_perm$gender"]
     } else if (column == 4 & ethn_coef == 1) {
-      coefs[m] = coef(model)["df_perm$ethnicity"]
+      coefs[m] = coef(model)["df_perm$ethnicityBlack"]
     } else if (column == 4 & ethn_coef == 2) {
-      coefs[m] = coef(model)["df_perm$ethnicity"]
+      coefs[m] = coef(model)["df_perm$ethnicityOther"]
     } else if (column == 4 & ethn_coef == 3) {
-      coefs[m] = coef(model)["df_perm$ethnicity"]
+      coefs[m] = coef(model)["df_perm$ethnicityWhite"]
     }
   }
   
-  permutation_p_value = sum( abs(coefs) > abs(beta_estimate) ) / n_perm
+  permutation_p_value = sum( abs(coefs) > abs(beta_estimate) ) / n_perm 
   
   return(c(permutation_p_value, coefs))
   
