@@ -177,6 +177,17 @@ beta_e2 = out$par[9]
 beta_e3 = out$par[10]
 sigma_squared = out$par[11]
 
+# check if predictions match actual data values
+df$salary_predicted <- beta_y0 + beta_y1*df$year_scaled + beta_u0 + beta_u1*df$university + beta_g0 + beta_g1*df$gender_dummy + beta_e0 + beta_e1*df$ethnicity_dummy1 + beta_e2*df$ethnicity_dummy2 + beta_e3*df$ethnicity_dummy2
+plt = ggplot(df) 
+plt = plt + geom_point(mapping = aes(x = salary_scaled, y = salary_predicted, alpha = 1/10)) 
+print(plt)
+
+# check if distribution of residual errors matches the assumed noise model 
+df$residuals <- df$salary_scaled - df$salary_predicted
+p <- ggplot(df, aes(sample = residuals))
+p + stat_qq() + stat_qq_line()
+
 # Function conducting a permutation test for the coefficient of a specified covariate that is 
 # fed into the scope of the function by specifying "column". An attempt was made to ensure that 
 # covariates are being put in the same order into the linear model for every permutation. The 
