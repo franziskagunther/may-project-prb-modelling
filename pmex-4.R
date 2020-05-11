@@ -290,18 +290,62 @@ permute_desired <- function(df, column, n_perm, ethn_coef=NULL, beta_estimate) {
 }
 
 permute_desired(df, 7, 1000, beta_estimate=beta_y1) 
-# the coefficient for the covariate "year" seems to be significant on the 1% level (p = 0.000000e+00)
+# The coefficient for the covariate "year" seems to be significant on the 1% level 
+# (p = 0.000000e+00)
 
 permute_desired(df, 5, 1000, beta_estimate=beta_u1) 
-# the coefficient for the covariate "university" seems to be significant on the 1% level (p = 0.000000e+00)
+# The coefficient for the covariate "university" seems to be significant on the 1% level 
+# (p = 0.000000e+00).
 
-# squared semipartial correlation coefficients as measures of relative importance 
+permute_desired(df, 3, 1000, beta_estimate=beta_g1)
+# The positive coefficient beta_g1 for the covariate "gender" seems to be significant on the 1% level 
+# (p = 0.000000e+00), which, since women (df$gender_dummy = 0) constitute the reference group, can be
+# interpreted as their relative underpayment compared to men in this specific sample. 
+
+# "Asian" constitutes the reference group for ethnicity. 
+permute_desired(df, 4, 1000, ethn_coef=1, beta_estimate=beta_e1)
+# The coefficient for the covariate "ethnicity" ("Black") seems to be significant on the 1% level 
+# (p = 0.000000e+00).
+
+permute_desired(df, 4, 1000, ethn_coef=2, beta_estimate=beta_e2)
+# The coefficient for the covariate "ethnicity" ("Other") seems to be significant on the 1% level 
+# (p = 0.000000e+00).
+
+permute_desired(df, 4, 1000, ethn_coef=3, beta_estimate=beta_e3)
+# The coefficient for the covariate "ethnicity" ("White") seems to be significant on the 1% level 
+# (p = 0.000000e+00).
+# Significant regression coefficients could be interpreted as ethnicity differences in salary. 
+
+# Coefficients and their significance match the ones computed through the pre-built linear model function. 
+summary(lm(formula = df$salary_scaled ~ 1 + df$year_scaled + 1 + df$university + 1 + df$gender_dummy + 1 + df$ethnicity_dummy1 + df$ethnicity_dummy2 + df$ethnicity_dummy3))
+
+# "Moreover, there is no guarantee that the variables which, as a group, accurately predict the 
+# outcome have any sensible interpretation (causal or otherwise) in isolation. In general, even 
+# attempting to qualitatively or quantitatively rank the ‘contribution’ of different predictors 
+# should not be attempted, since both the magnitude and sign of each predictor are conditional on 
+# the inclusion of all others." (Arnold et al., 2019)
+
+# Squared semipartial correlation coefficients as tentative measures of relative importance: The 
+# most important predictor seems to be the year the salary is earned in.
 df$ethnicity_dummy4 <- as.numeric(df$ethnicity)
 
 sr2_uni <- (spcor(df[,c(5, 7:9, 13)])$estimate[3, 1])^2
 sr2_year <- (spcor(df[,c(5, 7:9, 13)])$estimate[3, 2])^2
 sr2_gender <- (spcor(df[,c(5, 7:9, 13)])$estimate[3, 4])^2
 sr2_ethn <- (spcor(df[,c(5, 7:9, 13)])$estimate[3, 5])^2
+
+# contingency table 
+df_chi = data.frame(
+  ethnicity = c("Asian", "Asian", "Black", "Black", "Other", "Other", "White", "White"),
+  university = c(0, 1, 0, 1, 0, 1, 0, 1),
+  Freq = c(as.vector(table(df$university[df$ethnicity == "Asian"]))[1], as.vector(table(df$university[df$ethnicity == "Asian"]))[2], as.vector(table(df$university[df$ethnicity == "Black"]))[1], as.vector(table(df$university[df$ethnicity == "Black"]))[2], as.vector(table(df$university[df$ethnicity == "Other"]))[1], as.vector(table(df$university[df$ethnicity == "Other"]))[2], as.vector(table(df$university[df$ethnicity == "White"]))[1], as.vector(table(df$university[df$ethnicity == "White"]))[2])
+)
+
+full = glm(Freq ~ ethnicity * university, family = poisson(), data = df_chi)
+c = anova(full, test = 'Rao')
+
+
+
 
 
 
